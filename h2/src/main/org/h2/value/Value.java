@@ -82,9 +82,14 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
     public static final int VARCHAR_IGNORECASE = CLOB + 1;
 
     /**
+     * The value type for URL values.
+     */
+    public static final int URL = VARCHAR_IGNORECASE + 1;
+
+    /**
      * The value type for BINARY values.
      */
-    public static final int BINARY = VARCHAR_IGNORECASE + 1;
+    public static final int BINARY = URL + 1;
 
     /**
      * The value type for BINARY VARYING values.
@@ -324,8 +329,8 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
     static final byte GROUPS[] = {
             // NULL
             GROUP_NULL,
-            // CHAR, VARCHAR, CLOB, VARCHAR_IGNORECASE
-            GROUP_CHARACTER_STRING, GROUP_CHARACTER_STRING, GROUP_CHARACTER_STRING, GROUP_CHARACTER_STRING,
+            // CHAR, VARCHAR, CLOB, VARCHAR_IGNORECASE, URL
+            GROUP_CHARACTER_STRING, GROUP_CHARACTER_STRING, GROUP_CHARACTER_STRING, GROUP_CHARACTER_STRING, GROUP_CHARACTER_STRING,
             // BINARY, VARBINARY, BLOB
             GROUP_BINARY_STRING, GROUP_BINARY_STRING, GROUP_BINARY_STRING,
             // BOOLEAN
@@ -356,7 +361,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
     private static final String NAMES[] = {
             "UNKNOWN",
             "NULL", //
-            "CHARACTER", "CHARACTER VARYING", "CHARACTER LARGE OBJECT", "VARCHAR_IGNORECASE", //
+            "CHARACTER", "CHARACTER VARYING", "CHARACTER LARGE OBJECT", "VARCHAR_IGNORECASE", "URL", //
             "BINARY", "BINARY VARYING", "BINARY LARGE OBJECT", //
             "BOOLEAN", //
             "TINYINT", "SMALLINT", "INTEGER", "BIGINT", //
@@ -1145,6 +1150,8 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
             return convertToClob(targetType, conversionMode, column);
         case VARCHAR_IGNORECASE:
             return convertToVarcharIgnoreCase(targetType, conversionMode, column);
+        case URL:
+            return convertToUrl(targetType, conversionMode, provider, column);
         case BINARY:
             return convertToBinary(targetType, conversionMode, column);
         case VARBINARY:
@@ -1348,6 +1355,20 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
             }
         }
         return valueType == Value.VARCHAR_IGNORECASE ? this : ValueVarcharIgnoreCase.get(getString());
+    }
+
+    private Value convertToUrl(TypeInfo targetType, int conversionMode, CastDataProvider provider, Object column) {
+        int valueType = getValueType();
+        switch (valueType) {
+            case URL:
+                return this; 
+            case VARCHAR:
+            case VARCHAR_IGNORECASE:
+            case CHAR:
+                return ValueUrl.get(getString(), provider); 
+            default:
+                throw getDataConversionError(targetType.getValueType());
+        }
     }
 
     private ValueBinary convertToBinary(TypeInfo targetType, int conversionMode, Object column) {
