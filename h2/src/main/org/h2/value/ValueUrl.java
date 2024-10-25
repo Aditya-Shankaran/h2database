@@ -15,7 +15,7 @@ import org.h2.util.StringUtils;
 import java.util.regex.Pattern;
 
 /**
- * Implementation of the EMAIL data type.
+ * Implementation of the URL data type.
  */
 public final class ValueUrl extends ValueStringBase {
 
@@ -53,7 +53,7 @@ public final class ValueUrl extends ValueStringBase {
     }
 
     /**
-     * Get or create an EMAIL value for the given string with a CastDataProvider.
+     * Get or create a URL value for the given string with a CastDataProvider.
      *
      * @param s        
             the url string
@@ -103,13 +103,5 @@ public final class ValueUrl extends ValueStringBase {
         ValueUrl o = (ValueUrl) other;
         return value.equals(o.value);
     }
-
-    // @Override
-    // public int compareSecure(Value o, CompareMode mode) {
-    //     if (!(o instanceof ValueEmail)) {
-    //         throw DbException.get(ErrorCode.INVALID_CLASS_2, "EMAIL", o.getClass().getName());
-    //     }
-    //     return value.compareTo(((ValueEmail) o).value);
-    // }
 
 }
