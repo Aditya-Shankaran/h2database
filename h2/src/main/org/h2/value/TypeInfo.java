@@ -48,6 +48,11 @@ public class TypeInfo extends ExtTypeInfo implements Typed {
     public static final TypeInfo TYPE_VARCHAR_IGNORECASE;
 
     /**
+     * URL type with maximum parameters.
+     */
+    public static final TypeInfo TYPE_URL;
+
+    /**
      * CHARACTER LARGE OBJECT type with maximum parameters.
      */
     public static final TypeInfo TYPE_CLOB;
@@ -227,6 +232,7 @@ public class TypeInfo extends ExtTypeInfo implements Typed {
         infos[Value.VARCHAR] = TYPE_VARCHAR = new TypeInfo(Value.VARCHAR);
         infos[Value.CLOB] = TYPE_CLOB = new TypeInfo(Value.CLOB);
         infos[Value.VARCHAR_IGNORECASE] = TYPE_VARCHAR_IGNORECASE = new TypeInfo(Value.VARCHAR_IGNORECASE);
+        infos[Value.URL] = TYPE_URL = new TypeInfo(Value.URL);
         // BINARY
         infos[Value.BINARY] = TYPE_BINARY = new TypeInfo(Value.BINARY, -1L);
         infos[Value.VARBINARY] = TYPE_VARBINARY = new TypeInfo(Value.VARBINARY);
@@ -352,6 +358,14 @@ public class TypeInfo extends ExtTypeInfo implements Typed {
                 precision = 1;
             }
             return new TypeInfo(Value.VARCHAR_IGNORECASE, precision);
+        case Value.URL:
+            if (precision < 1 || precision >= Constants.MAX_STRING_LENGTH) {
+                if (precision != 0) {
+                    return TYPE_URL;
+                }
+                precision = 1;
+            }
+            return new TypeInfo(Value.URL, precision);
         case Value.BINARY:
             if (precision < 1) {
                 return TYPE_BINARY;
@@ -1015,6 +1029,7 @@ public class TypeInfo extends ExtTypeInfo implements Typed {
             return precision >= 0L ? precision : 1L;
         case Value.VARCHAR:
         case Value.VARCHAR_IGNORECASE:
+        case Value.URL:
         case Value.VARBINARY:
         case Value.JAVA_OBJECT:
         case Value.ENUM:
@@ -1110,6 +1125,7 @@ public class TypeInfo extends ExtTypeInfo implements Typed {
         case Value.VARCHAR:
         case Value.CLOB:
         case Value.VARCHAR_IGNORECASE:
+        case Value.URL:
         case Value.BINARY:
         case Value.VARBINARY:
         case Value.BLOB:
@@ -1183,6 +1199,7 @@ public class TypeInfo extends ExtTypeInfo implements Typed {
             return precision >= 0 ? (int) precision : 1;
         case Value.VARCHAR:
         case Value.VARCHAR_IGNORECASE:
+        case Value.URL:
         case Value.JSON:
             return precision >= 0 ? (int) precision : Constants.MAX_STRING_LENGTH;
         case Value.CLOB:
@@ -1273,6 +1290,7 @@ public class TypeInfo extends ExtTypeInfo implements Typed {
         case Value.VARCHAR:
         case Value.CLOB:
         case Value.VARCHAR_IGNORECASE:
+        case Value.URL:
         case Value.BINARY:
         case Value.VARBINARY:
         case Value.BLOB:

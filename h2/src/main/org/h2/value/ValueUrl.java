@@ -12,8 +12,6 @@ import org.h2.engine.SysProperties;
 import org.h2.message.DbException;
 import org.h2.util.StringUtils;
 
-import java.util.regex.Pattern;
-
 /**
  * Implementation of the URL data type.
  */
@@ -21,18 +19,8 @@ public final class ValueUrl extends ValueStringBase {
 
     public static final ValueUrl EMPTY = new ValueUrl("");
 
-    private static final Pattern URL_PATTERN = Pattern.compile(
-        "^(https?|ftp)://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(:\\d+)?(/.*)?$", 
-        Pattern.CASE_INSENSITIVE
-    );
-
     private ValueUrl(String value) {
         super(value);
-    }
-
-    @Override
-    public StringBuilder getSQL(StringBuilder builder, int sqlFlags) {
-        return StringUtils.quoteStringSQL(builder, value);
     }
 
     @Override
@@ -40,55 +28,16 @@ public final class ValueUrl extends ValueStringBase {
         return URL;
     }
 
-    /**
-     * Get or create an URL value for the given string.
-     *
-     * @param s 
-            the url string
-     * @return 
-            the url value
-     */
-    public static Value get(String s) {
-        return get(s, null);
+    @Override
+    public int compareTypeSafe(Value v, CompareMode mode, CastDataProvider provider) {
+        return mode.compareString(value, ((ValueStringBase) v).value, true);
     }
 
-    /**
-     * Get or create a URL value for the given string with a CastDataProvider.
-     *
-     * @param s        
-            the url string
-     * @param provider 
-            the cast information provider, or {@code null}
-     * @return 
-            the URL value
-     */
-    public static Value get(String s, CastDataProvider provider) {
-        if (s.isEmpty()) {
-            return provider != null && provider.getMode().treatEmptyStringsAsNull ? ValueNull.INSTANCE : EMPTY;
-        }
-        
-        if (!URL_PATTERN.matcher(s).matches()) {
-            throw DbException.get(ErrorCode.INVALID_VALUE_2, "Value", s);
-        }
-
-        // Everything in url should be lowercase
-        String normalized = s.toLowerCase();
-        ValueUrl obj = new ValueUrl(StringUtils.cache(normalized));
-        if (s.length() > SysProperties.OBJECT_CACHE_MAX_PER_ELEMENT_SIZE) {
-            return obj;
-        }
-        return Value.cache(obj);
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof ValueUrl
+                && value.equals(((ValueUrl) other).value);
     }
-
-    // @Override
-    // public String getString() {
-    //     return value;
-    // }
-
-    // @Override
-    // public Object getObject() {
-    //     return value;
-    // }
 
     @Override
     public int hashCode() {
@@ -96,12 +45,37 @@ public final class ValueUrl extends ValueStringBase {
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof ValueUrl)) {
-            return false;
-        }
-        ValueUrl o = (ValueUrl) other;
-        return value.equals(o.value);
+    public StringBuilder getSQL(StringBuilder builder, int sqlFlags) {
+        return StringUtils.quoteStringSQL(builder, value);
     }
 
+    /**
+     * Get or create a URL value for the given string.
+     *
+     * @param s the string
+     * @return the value
+     */
+    public static Value get(String s) {
+        return get(s, null);
+    }
+
+    /**
+     * Get or create a URL value for the given string.
+     *
+     * @param s 
+            the url string
+     * @return 
+            the url value
+     */
+    public static Value get(String s, CastDataProvider provider) {
+        if (s.isEmpty()) {
+            return provider != null && provider.getMode().treatEmptyStringsAsNull ? ValueNull.INSTANCE : EMPTY;
+        }
+
+        ValueUrl obj = new ValueUrl(StringUtils.cache(s));
+        if (s.length() > SysProperties.OBJECT_CACHE_MAX_PER_ELEMENT_SIZE) {
+            return obj;
+        }
+        return Value.cache(obj);
+    }
 }

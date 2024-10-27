@@ -68,6 +68,7 @@ import org.h2.value.ValueUuid;
 import org.h2.value.ValueVarbinary;
 import org.h2.value.ValueVarchar;
 import org.h2.value.ValueVarcharIgnoreCase;
+import org.h2.value.ValueUrl;
 import org.h2.value.lob.LobData;
 import org.h2.value.lob.LobDataDatabase;
 import org.h2.value.lob.LobDataInMemory;
@@ -91,9 +92,10 @@ public final class ValueDataType extends BasicDataType<Value> implements Statefu
     private static final byte VARBINARY = 12;
     private static final byte VARCHAR = 13;
     private static final byte VARCHAR_IGNORECASE = 14;
-    private static final byte BLOB = 15;
-    private static final byte CLOB = 16;
-    private static final byte ARRAY = 17;
+    private static final byte URL = 15;
+    private static final byte BLOB = 16;
+    private static final byte CLOB = 17;
+    private static final byte ARRAY = 18;
     private static final byte JAVA_OBJECT = 19;
     private static final byte UUID = 20;
     private static final byte CHAR = 21;
@@ -417,6 +419,9 @@ public final class ValueDataType extends BasicDataType<Value> implements Statefu
         case Value.VARCHAR_IGNORECASE:
             writeString(buff.put(VARCHAR_IGNORECASE), v.getString());
             break;
+        case Value.URL:
+            writeString(buff.put(URL), v.getString());
+            break;
         case Value.CHAR:
             writeString(buff.put(CHAR), v.getString());
             break;
@@ -669,6 +674,8 @@ public final class ValueDataType extends BasicDataType<Value> implements Statefu
             return ValueVarchar.get(readString(buff));
         case VARCHAR_IGNORECASE:
             return ValueVarcharIgnoreCase.get(readString(buff));
+        case URL:
+            return ValueUrl.get(readString(buff));
         case CHAR:
             return ValueChar.get(readString(buff));
         case ENUM: {

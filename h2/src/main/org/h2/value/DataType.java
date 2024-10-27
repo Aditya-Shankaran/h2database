@@ -129,7 +129,7 @@ public class DataType {
                 "CHARACTER LARGE OBJECT", "CLOB", "CHAR LARGE OBJECT",
                 "NCLOB", "NCHAR LARGE OBJECT", "NATIONAL CHARACTER LARGE OBJECT");
         add(Value.VARCHAR_IGNORECASE, Types.VARCHAR, createString(false, false), "VARCHAR_IGNORECASE");
-        add(Value.URL, Types.OTHER, createString(false, false), "URL");
+        add(Value.URL, Types.VARCHAR, createString(false, false), "URL");
         add(Value.BINARY, Types.BINARY, createBinary(true), "BINARY");
         add(Value.VARBINARY, Types.VARBINARY, createBinary(false),
                 "BINARY VARYING", "VARBINARY", "RAW", "BYTEA", "LONG RAW", "LONGVARBINARY");
@@ -696,7 +696,7 @@ public class DataType {
      * @return true if the value type is a character string type
      */
     public static boolean isCharacterStringType(int type) {
-        return type >= Value.CHAR && type <= Value.VARCHAR_IGNORECASE;
+        return type >= Value.CHAR && type <= Value.URL;
     }
 
     /**
@@ -706,7 +706,7 @@ public class DataType {
      * @return true if the value type is a String type
      */
     public static boolean isStringType(int type) {
-        return type == Value.VARCHAR || type == Value.CHAR || type == Value.VARCHAR_IGNORECASE;
+        return type == Value.VARCHAR || type == Value.CHAR || type == Value.VARCHAR_IGNORECASE || type == Value.URL;
     }
 
     /**

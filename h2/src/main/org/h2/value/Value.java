@@ -41,6 +41,8 @@ import org.h2.value.lob.LobData;
 import org.h2.value.lob.LobDataDatabase;
 import org.h2.value.lob.LobDataInMemory;
 
+import java.util.regex.Pattern;
+
 /**
  * This is the base class for all value classes.
  * It provides conversion and comparison methods.
@@ -1151,7 +1153,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         case VARCHAR_IGNORECASE:
             return convertToVarcharIgnoreCase(targetType, conversionMode, column);
         case URL:
-            return convertToUrl(targetType, conversionMode, provider, column);
+            return convertToUrl(targetType, provider, conversionMode, column);
         case BINARY:
             return convertToBinary(targetType, conversionMode, column);
         case VARBINARY:
@@ -1357,18 +1359,56 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         return valueType == Value.VARCHAR_IGNORECASE ? this : ValueVarcharIgnoreCase.get(getString());
     }
 
-    private Value convertToUrl(TypeInfo targetType, int conversionMode, CastDataProvider provider, Object column) {
+    private Value convertToUrl(TypeInfo targetType, CastDataProvider provider, int conversionMode, Object column) {
+        Pattern URL_PATTERN = Pattern.compile(
+            "^(https?|ftp)://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(:\\d+)?(/.*)?$", 
+            Pattern.CASE_INSENSITIVE
+        );
         int valueType = getValueType();
         switch (valueType) {
-            case URL:
-                return this; 
-            case VARCHAR:
-            case VARCHAR_IGNORECASE:
-            case CHAR:
-                return ValueUrl.get(getString(), provider); 
-            default:
-                throw getDataConversionError(targetType.getValueType());
+        case BLOB:
+        case JAVA_OBJECT:
+            throw getDataConversionError(targetType.getValueType());
         }
+        if (conversionMode != CONVERT_TO) {
+            String s = getString();
+            if (!URL_PATTERN.matcher(s).matches()) {
+                throw DbException.getInvalidValueException("Url", s);
+            }
+            int p = MathUtils.convertLongToInt(targetType.getPrecision());
+            if (s.length() > p) {
+                if (conversionMode != CAST_TO) {
+                    throw getValueTooLongException(targetType, column);
+                }
+                return ValueUrl.get(s.substring(0, p), provider);
+            }
+        }
+
+        String url = getString();
+
+        // Separate scheme, this is case insensitive
+        int schemeEnd = url.indexOf("://");
+        String scheme = "";
+        if (schemeEnd != -1) {
+            scheme = url.substring(0, schemeEnd).toLowerCase();
+            url = url.substring(schemeEnd + 3);
+        }
+
+        // Separate path, this is case sensitive so preserve the case
+        int pathStart = url.indexOf("/");
+        String path = "";
+        if (pathStart != -1) {
+            path = url.substring(pathStart);
+            url = url.substring(0, pathStart);
+        }
+
+        // Separate host and port, this is case insensitive
+        String hostPort = url.toLowerCase();
+
+        // Combine all parts back together
+        String normalizedUrl = scheme + "://" + hostPort + path;
+
+        return valueType == Value.URL ? this : ValueUrl.get(normalizedUrl, provider);
     }
 
     private ValueBinary convertToBinary(TypeInfo targetType, int conversionMode, Object column) {
@@ -1468,6 +1508,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         case CHAR:
         case VARCHAR:
         case VARCHAR_IGNORECASE:
+        case URL:
             return ValueBoolean.get(getBoolean());
         case TINYINT:
         case SMALLINT:
@@ -1501,6 +1542,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         case CHAR:
         case VARCHAR:
         case VARCHAR_IGNORECASE:
+        case URL:
         case BOOLEAN:
             return ValueTinyint.get(getByte());
         case SMALLINT:
@@ -1558,6 +1600,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         case CHAR:
         case VARCHAR:
         case VARCHAR_IGNORECASE:
+        case URL:
         case BOOLEAN:
         case TINYINT:
             return ValueSmallint.get(getShort());
@@ -1615,6 +1658,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         case CHAR:
         case VARCHAR:
         case VARCHAR_IGNORECASE:
+        case URL:
         case BOOLEAN:
         case TINYINT:
         case ENUM:
@@ -1671,6 +1715,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         case CHAR:
         case VARCHAR:
         case VARCHAR_IGNORECASE:
+        case URL:
         case BOOLEAN:
         case TINYINT:
         case SMALLINT:
@@ -1800,6 +1845,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
             break;
         case CHAR:
         case VARCHAR:
+        case URL:
         case VARCHAR_IGNORECASE: {
             String s = getString().trim();
             try {
@@ -1897,6 +1943,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         }
         case VARCHAR:
         case VARCHAR_IGNORECASE:
+        case URL:
         case CHAR:
             return ValueDate.parse(getString().trim());
         default:
@@ -1931,6 +1978,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         }
         case VARCHAR:
         case VARCHAR_IGNORECASE:
+        case URL:
         case CHAR:
             v = ValueTime.parse(getString().trim(), provider);
             break;
@@ -1975,6 +2023,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         }
         case VARCHAR:
         case VARCHAR_IGNORECASE:
+        case URL:
         case CHAR:
             v = ValueTimeTimeZone.parse(getString().trim(), provider);
             break;
@@ -2023,6 +2072,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         }
         case VARCHAR:
         case VARCHAR_IGNORECASE:
+        case URL:
         case CHAR:
             v = ValueTimestamp.parse(getString().trim(), provider);
             break;
@@ -2090,6 +2140,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         }
         case VARCHAR:
         case VARCHAR_IGNORECASE:
+        case URL:
         case CHAR:
             v = ValueTimestampTimeZone.parse(getString().trim(), provider);
             break;
@@ -2154,6 +2205,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
             break;
         case VARCHAR:
         case VARCHAR_IGNORECASE:
+        case URL:
         case CHAR: {
             String s = getString();
             try {
@@ -2216,6 +2268,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
             break;
         case VARCHAR:
         case VARCHAR_IGNORECASE:
+        case URL:
         case CHAR: {
             String s = getString();
             try {
@@ -2337,6 +2390,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
             return extTypeInfo.getValue(getInt(), provider);
         case VARCHAR:
         case VARCHAR_IGNORECASE:
+        case URL:
         case CHAR:
             return extTypeInfo.getValue(getString(), provider);
         default:
@@ -2383,6 +2437,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         case CHAR:
         case VARCHAR:
         case CLOB:
+        case URL:
         case VARCHAR_IGNORECASE:
             result = ValueGeometry.get(getString());
             break;
@@ -2450,6 +2505,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         case VARCHAR:
         case CLOB:
         case VARCHAR_IGNORECASE:
+        case URL:
         case DATE:
         case TIME:
         case TIME_TZ:
@@ -2504,6 +2560,7 @@ public abstract class Value extends VersionedValue<Value> implements HasSQL, Typ
         case CHAR:
         case VARCHAR:
         case VARCHAR_IGNORECASE:
+        case URL:
             return ValueUuid.get(getString());
         default:
             throw getDataConversionError(UUID);

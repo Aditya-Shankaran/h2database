@@ -38,6 +38,11 @@ public final class H2Type implements SQLType {
      */
     public static final H2Type VARCHAR_IGNORECASE = new H2Type(TypeInfo.TYPE_VARCHAR_IGNORECASE, "VARCHAR_IGNORECASE");
 
+    /**
+     * The URL data type.
+     */
+    public static final H2Type URL = new H2Type(TypeInfo.TYPE_URL, "URL");
+
     // Binary strings
 
     /**
