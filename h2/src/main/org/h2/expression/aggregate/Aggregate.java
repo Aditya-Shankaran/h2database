@@ -177,6 +177,7 @@ public class Aggregate extends AbstractAggregate implements ExpressionWithFlags 
 
         addAggregate("JSON_OBJECTAGG", AggregateType.JSON_OBJECTAGG);
         addAggregate("JSON_ARRAYAGG", AggregateType.JSON_ARRAYAGG);
+        addAggregate("HARMONIC_MEAN", AggregateType.HARMONIC_MEAN);
     }
 
     private static void addAggregate(String name, AggregateType type) {
@@ -495,6 +496,8 @@ public class Aggregate extends AbstractAggregate implements ExpressionWithFlags 
         case JSON_OBJECTAGG:
             // ROW(key, value) are collected, so NULL values can't be passed
             return new AggregateDataCollecting(distinct, false, NullCollectionMode.USED_OR_IMPOSSIBLE);
+        case HARMONIC_MEAN:
+            return new AggregateDataHarmonic();
         default:
             throw DbException.getInternalError("type=" + aggregateType);
         }
@@ -1009,6 +1012,7 @@ public class Aggregate extends AbstractAggregate implements ExpressionWithFlags 
                 throw DbException.get(ErrorCode.SUM_OR_AVG_ON_WRONG_DATATYPE_1, getTraceSQL());
             }
             break;
+        case HARMONIC_MEAN:
         case AVG:
             if ((type = getAvgType(type)) == null) {
                 throw DbException.get(ErrorCode.SUM_OR_AVG_ON_WRONG_DATATYPE_1, getTraceSQL());

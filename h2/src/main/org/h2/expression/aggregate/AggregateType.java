@@ -235,4 +235,9 @@ public enum AggregateType {
      */
     JSON_ARRAYAGG,
 
+    /**
+     * The aggregate type for Harmonic_Mean(expression)
+     */
+    HARMONIC_MEAN,
+
 }

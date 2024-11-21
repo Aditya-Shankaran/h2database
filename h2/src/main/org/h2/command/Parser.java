@@ -3504,6 +3504,10 @@ public final class Parser extends ParserBase {
             readJsonObjectFunctionFlags(r, true);
             break;
         }
+        case HARMONIC_MEAN: {
+            r = new Aggregate(aggregateType, new Expression[] { readExpression() }, currentSelect, false);
+            break;
+        }
         default:
             boolean distinct = readDistinctAgg();
             r = new Aggregate(aggregateType, new Expression[] { readExpression() }, currentSelect, distinct);
